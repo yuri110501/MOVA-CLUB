@@ -1,0 +1,198 @@
+{
+  "content": {
+    "heroTitle": {
+      "en": "Mova Club",
+      "pt": "Mova Club"
+    },
+    "heroSubtitle": {
+      "en": "Fitness. Community. Experience.",
+      "pt": "Fitness. Comunidade. Experiência."
+    },
+    "heroImage": "/assets/fitness-concept.webp",
+    "heroImageConcept": true,
+    "heroAlt": {
+      "en": "Illustrative concept of a group fitness experience outdoors",
+      "pt": "Conceito ilustrativo de uma experiência fitness ao ar livre"
+    },
+    "aboutTitle": {
+      "en": "More than\njust a workout.",
+      "pt": "Mais que\num treino."
+    },
+    "aboutBody": {
+      "en": "A community of women who move together — for a stronger body, a calmer mind and a more connected life.",
+      "pt": "Uma comunidade de mulheres que se movimentam juntas — por um corpo mais forte, uma mente mais tranquila e uma vida com mais conexão."
+    },
+    "aboutImage": "/assets/movement-concept.webp",
+    "aboutImageConcept": true,
+    "aboutAlt": {
+      "en": "AI-generated concept of women connecting after movement",
+      "pt": "Conceito gerado por IA de mulheres se conectando após uma atividade"
+    },
+    "anaTitle": {
+      "en": "The woman\nbehind the movement.",
+      "pt": "A mulher\npor trás do movimento."
+    },
+    "anaBody": {
+      "en": "Ana Claudia Maia brings fitness, well-being and community together in Orlando. MOVA Club is her invitation to move and connect.",
+      "pt": "Ana Claudia Maia reúne fitness, bem-estar e comunidade em Orlando. O MOVA Club é seu convite para se movimentar e criar conexões."
+    },
+    "anaImage": "",
+    "anaAlt": {
+      "en": "Ana Claudia Maia, founder of MOVA Club",
+      "pt": "Ana Claudia Maia, fundadora do MOVA Club"
+    },
+    "instagram": "https://www.instagram.com/movacluborlando/",
+    "contactEmail": "",
+    "footerText": {
+      "en": "Fitness. Community. Experience.",
+      "pt": "Fitness. Comunidade. Experiência."
+    },
+    "credit": "Designed & developed by Venancio Neto"
+  },
+  "events": [
+    {
+      "id": "the-first-move",
+      "status": "published",
+      "available": true,
+      "name": {
+        "en": "The First Move",
+        "pt": "The First Move"
+      },
+      "date": "2026-11-22",
+      "start": "09:00",
+      "end": "12:00",
+      "timezone": "America/New_York",
+      "city": "Orlando, Florida, USA",
+      "venue": {
+        "en": "Venue to be announced",
+        "pt": "Local a ser anunciado"
+      },
+      "address": "",
+      "mapUrl": "",
+      "price": null,
+      "capacity": null,
+      "currency": "USD",
+      "cover": "/assets/fitness-concept.webp",
+      "coverConcept": true,
+      "description": {
+        "en": "Our first morning together: movement, brunch and connections. Join the beginning of MOVA Club in Orlando.",
+        "pt": "Nossa primeira manhã juntas: movimento, brunch e conexões. Faça parte do começo do MOVA Club em Orlando."
+      },
+      "included": {
+        "en": "Gifts, giveaways & community.",
+        "pt": "Brindes, sorteios e comunidade."
+      },
+      "eventbriteUrl": "",
+      "schedule": [
+        {
+          "start": "09:00",
+          "end": "09:30",
+          "title": {
+            "en": "Check-in",
+            "pt": "Check-in"
+          }
+        },
+        {
+          "start": "09:30",
+          "end": "10:00",
+          "title": {
+            "en": "Meet MOVA & our supporters",
+            "pt": "Apresentação da MOVA e dos apoiadores"
+          }
+        },
+        {
+          "start": "10:00",
+          "end": "10:35",
+          "title": {
+            "en": "Class",
+            "pt": "Aula"
+          }
+        },
+        {
+          "start": "10:35",
+          "end": "12:00",
+          "title": {
+            "en": "Brunch & connections",
+            "pt": "Brunch e conexões"
+          }
+        }
+      ]
+    }
+  ],
+  "gallery": [],
+  "sponsors": [],
+  "faq": [
+    {
+      "question": {
+        "en": "Can I come on my own?",
+        "pt": "Posso ir sozinha?"
+      },
+      "answer": {
+        "en": "Absolutely. Come solo or bring a friend — MOVA is about connecting.",
+        "pt": "Claro. Venha sozinha ou com uma amiga — o MOVA é sobre conexão."
+      }
+    },
+    {
+      "question": {
+        "en": "Where is the event?",
+        "pt": "Onde será o evento?"
+      },
+      "answer": {
+        "en": "The First Move takes place in Orlando. The venue and full address will be announced.",
+        "pt": "O The First Move acontece em Orlando. O local e o endereço completo serão anunciados."
+      }
+    },
+    {
+      "question": {
+        "en": "What should I bring?",
+        "pt": "O que devo levar?"
+      },
+      "answer": {
+        "en": "Wear comfortable activewear. The final list of what to bring will be shared before ticket sales open.",
+        "pt": "Use roupas confortáveis para se exercitar. A lista final do que levar será divulgada antes da abertura das vendas."
+      }
+    },
+    {
+      "question": {
+        "en": "How do tickets and cancellations work?",
+        "pt": "Como funcionam os ingressos e cancelamentos?"
+      },
+      "answer": {
+        "en": "Ticket sales are not open. This preview offers a demonstration only. Prices and the cancellation policy will be confirmed before real sales.",
+        "pt": "As vendas ainda não estão abertas. Esta prévia oferece apenas uma demonstração. Os valores e a política de cancelamento serão confirmados antes da venda real."
+      }
+    }
+  ],
+  "legal": {
+    "terms": {
+      "title": {
+        "en": "Terms & Conditions",
+        "pt": "Termos e condições"
+      },
+      "body": {
+        "en": "DRAFT FOR REVIEW — NOT APPROVED FOR REAL SALES.\n\nThis local preview demonstrates the MOVA Club event experience. It does not sell tickets, collect payment or reserve places.\n\nBefore sales open, MOVA Club must confirm the organizer’s legal identity and contact, participation requirements, ticket conditions, cancellation and refund rules, event changes and any applicable accessibility arrangements. These commercial policies have not been defined.\n\nUse this document as an editable structure for professional review, not as final purchase terms.",
+        "pt": "RASCUNHO PARA REVISÃO — NÃO APROVADO PARA VENDAS REAIS.\n\nEsta prévia local demonstra a experiência de eventos MOVA Club. Não vende ingressos, não recebe pagamentos e não reserva vagas.\n\nAntes da abertura das vendas, a MOVA Club deverá confirmar a identidade e o contato da organização, requisitos de participação, condições dos ingressos, regras de cancelamento e reembolso, alterações do evento e condições de acessibilidade aplicáveis. Essas políticas comerciais ainda não foram definidas.\n\nEste documento é uma estrutura editável para revisão profissional, não os termos finais de compra."
+      }
+    },
+    "privacy": {
+      "title": {
+        "en": "Privacy Policy",
+        "pt": "Política de privacidade"
+      },
+      "body": {
+        "en": "DRAFT FOR REVIEW.\n\nThe demonstration checkout asks for no name, email or payment details. Image permission is required to complete the demonstration, but the choice remains in the current browser interaction only. It is not a real authorization record.\n\nAdministrative access uses individual ChatGPT sign-in and server-side permissions. Editorial content, access records, invitations and content history are stored in the Site database. Uploaded photographs are stored in the Site file storage.\n\nBefore real sales, MOVA Club must define the responsible organization, contact, data purposes, applicable legal basis, providers, retention periods and the process for participant requests. The Eventbrite account and its data practices still require configuration and review.",
+        "pt": "RASCUNHO PARA REVISÃO.\n\nA compra demonstrativa não solicita nome, e-mail nem dados de pagamento. A autorização de imagem é obrigatória para concluir a demonstração, mas a escolha permanece somente na interação atual do navegador. Não constitui registro de autorização real.\n\nA administração utiliza contas individuais do ChatGPT e permissões verificadas no servidor. Conteúdo editorial, acessos, convites e histórico são armazenados no banco do Site. As fotografias enviadas ficam no armazenamento de arquivos do Site.\n\nAntes das vendas reais, a MOVA Club deverá definir a organização responsável, contato, finalidades dos dados, bases legais aplicáveis, prestadores, prazos de retenção e processo para solicitações de participantes. A conta Eventbrite e suas práticas de dados ainda precisam de configuração e revisão."
+      }
+    },
+    "image": {
+      "title": {
+        "en": "Photo & Video Release",
+        "pt": "Autorização de imagem e vídeo"
+      },
+      "body": {
+        "en": "DRAFT FOR REVIEW — NO REAL CONSENT IS COLLECTED HERE.\n\nPromotional use of a participant’s image must be presented separately from ticket purchase terms. A ticket purchase alone does not record promotional permission.\n\nBefore collecting permission, specify the organizer, event, intended uses, channels, duration, contact and procedure for questions or withdrawal where applicable. Confirm appropriate handling for anyone who does not grant permission.\n\nThe image-release checkbox is required to complete this demonstration and starts unchecked. Its choice is displayed on the demo confirmation only. A production consent record and the actual Eventbrite registration controls still require implementation and validation.",
+        "pt": "RASCUNHO PARA REVISÃO — NENHUM CONSENTIMENTO REAL É COLETADO AQUI.\n\nO uso promocional da imagem de participantes deve ser apresentado separadamente dos termos de compra. A compra de ingresso, por si só, não registra permissão promocional.\n\nAntes de solicitar a autorização, especificar organização, evento, usos previstos, canais, duração, contato e procedimento para dúvidas ou revogação, quando aplicável. Confirmar o tratamento adequado de quem não autorizar o uso.\n\nO checkbox de imagem é obrigatório para concluir esta demonstração e começa desmarcado. A escolha aparece somente na confirmação demonstrativa. O registro de consentimento em produção e os controles reais de inscrição do Eventbrite ainda precisam de implementação e validação."
+      }
+    }
+  }
+}
