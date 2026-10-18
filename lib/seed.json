@@ -29,17 +29,17 @@
       "pt": "Conceito gerado por IA de mulheres se conectando após uma atividade"
     },
     "anaTitle": {
-      "en": "The woman\nbehind the movement.",
-      "pt": "A mulher\npor trás do movimento."
+      "en": "The women\nbehind the movement.",
+      "pt": "As mulheres\npor trás do movimento."
     },
     "anaBody": {
-      "en": "Ana Claudia Maia brings fitness, well-being and community together in Orlando. MOVA Club is her invitation to move and connect.",
-      "pt": "Ana Claudia Maia reúne fitness, bem-estar e comunidade em Orlando. O MOVA Club é seu convite para se movimentar e criar conexões."
+      "en": "Founded by Ana Claudia Maia and co-founded by Bianca Marte, MOVA Club brings women together in Orlando through movement, well-being and connection.",
+      "pt": "Criado por Ana Claudia Maia, fundadora, e Bianca Marte, cofundadora, o MOVA Club reúne mulheres em Orlando por meio do movimento, do bem-estar e da conexão."
     },
     "anaImage": "",
     "anaAlt": {
-      "en": "Ana Claudia Maia, founder of MOVA Club",
-      "pt": "Ana Claudia Maia, fundadora do MOVA Club"
+      "en": "Ana Claudia Maia, founder, and Bianca Marte, co-founder of MOVA Club",
+      "pt": "Ana Claudia Maia, fundadora, e Bianca Marte, cofundadora do MOVA Club"
     },
     "instagram": "https://www.instagram.com/movacluborlando/",
     "contactEmail": "",
@@ -47,7 +47,7 @@
       "en": "Fitness. Community. Experience.",
       "pt": "Fitness. Comunidade. Experiência."
     },
-    "credit": "Designed & developed by Venancio Neto"
+    "credit": "Designed by Venancio Neto"
   },
   "events": [
     {
@@ -119,8 +119,58 @@
       ]
     }
   ],
-  "gallery": [],
-  "sponsors": [],
+  "gallery": [
+    {
+      "image": "/assets/fitness-concept.webp",
+      "caption": {
+        "en": "Outdoor movement · concept image",
+        "pt": "Movimento ao ar livre · imagem conceitual"
+      },
+      "active": true,
+      "concept": true
+    },
+    {
+      "image": "/assets/movement-concept.webp",
+      "caption": {
+        "en": "Connection through movement · concept image",
+        "pt": "Conexão pelo movimento · imagem conceitual"
+      },
+      "active": true,
+      "concept": true
+    },
+    {
+      "image": "/assets/apparel-preview.webp",
+      "caption": {
+        "en": "MOVA activewear · product mockup",
+        "pt": "Moda fitness MOVA · mockup do produto"
+      },
+      "active": true,
+      "concept": true
+    },
+    {
+      "image": "/assets/brunch-concept.webp",
+      "caption": {
+        "en": "Brunch together · concept image",
+        "pt": "Brunch juntas · imagem conceitual"
+      },
+      "active": true,
+      "concept": true
+    }
+  ],
+  "sponsors": [
+    {
+      "name": "Eventbrite",
+      "logo": "/assets/sponsor-eventbrite.png",
+      "url": "https://www.eventbrite.com/",
+      "active": true
+    },
+    {
+      "name": "Venancio Neto",
+      "logo": "/assets/sponsor-venancio.png",
+      "url": "https://venancionneto.venancionneto.chatgpt.site",
+      "active": true
+    }
+  ],
   "faq": [
     {
       "question": {
@@ -180,8 +230,8 @@
         "pt": "Política de privacidade"
       },
       "body": {
-        "en": "DRAFT FOR REVIEW.\n\nThe demonstration checkout asks for no name, email or payment details. Image permission is required to complete the demonstration, but the choice remains in the current browser interaction only. It is not a real authorization record.\n\nAdministrative access uses individual ChatGPT sign-in and server-side permissions. Editorial content, access records, invitations and content history are stored in the Site database. Uploaded photographs are stored in the Site file storage.\n\nBefore real sales, MOVA Club must define the responsible organization, contact, data purposes, applicable legal basis, providers, retention periods and the process for participant requests. The Eventbrite account and its data practices still require configuration and review.",
-        "pt": "RASCUNHO PARA REVISÃO.\n\nA compra demonstrativa não solicita nome, e-mail nem dados de pagamento. A autorização de imagem é obrigatória para concluir a demonstração, mas a escolha permanece somente na interação atual do navegador. Não constitui registro de autorização real.\n\nA administração utiliza contas individuais do ChatGPT e permissões verificadas no servidor. Conteúdo editorial, acessos, convites e histórico são armazenados no banco do Site. As fotografias enviadas ficam no armazenamento de arquivos do Site.\n\nAntes das vendas reais, a MOVA Club deverá definir a organização responsável, contato, finalidades dos dados, bases legais aplicáveis, prestadores, prazos de retenção e processo para solicitações de participantes. A conta Eventbrite e suas práticas de dados ainda precisam de configuração e revisão."
+        "en": "DRAFT FOR REVIEW.\n\nThe checkout simulates tickets, buyer details, card entry, review and confirmation. Use fictional information only. Fields are processed in the current browser interaction; they are not sent to MOVA, Eventbrite or a payment provider, and are not saved in browser storage. Closing or completing the checkout clears its temporary values. No payment, booking, email or real ticket is created.\n\nAdministrative access uses individual ChatGPT sign-in and server-side permissions. Editorial content, access records, invitations and content history are stored in the Site database. Uploaded photographs are stored in the Site file storage.\n\nBefore real sales, MOVA Club must define its responsible organization, contact, data purposes, providers, retention periods and participant request process. Eventbrite is not connected to this simulation.",
+        "pt": "RASCUNHO PARA REVISÃO.\n\nO checkout simula ingresso, dados do comprador, cartão, revisão e confirmação. Use somente informações fictícias. Os campos são processados na interação atual do navegador; não são enviados à MOVA, ao Eventbrite nem a um provedor de pagamentos e não são salvos no armazenamento do navegador. Fechar ou concluir o checkout limpa os valores temporários. Nenhuma cobrança, reserva, mensagem ou ingresso real é criado.\n\nA administração utiliza contas individuais do ChatGPT e permissões verificadas no servidor. Conteúdo editorial, acessos, convites e histórico ficam no banco do Site. Fotografias enviadas ficam no armazenamento de arquivos do Site.\n\nAntes das vendas reais, a MOVA Club deverá definir organização responsável, contato, finalidades dos dados, prestadores, retenção e atendimento a participantes. O Eventbrite não está conectado a esta simulação."
       }
     },
     "image": {
