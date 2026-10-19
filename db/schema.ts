@@ -5,6 +5,14 @@ export const documents = sqliteTable("mova_documents", {
   body: text("body").notNull(),
   revision: integer("revision").notNull(),
 });
+export const drafts = sqliteTable("mova_drafts", {
+  id: integer("id").primaryKey(),
+  body: text("body").notNull(),
+  revision: integer("revision").notNull(),
+  baseRevision: integer("base_revision").notNull(),
+  updatedAt: text("updated_at").notNull(),
+  updatedBy: text("updated_by"),
+});
 export const history = sqliteTable("mova_history", {
   revision: integer("revision").primaryKey(),
   body: text("body").notNull(),
