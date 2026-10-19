@@ -22,3 +22,7 @@ button.footer-admin{padding:0;background:none;font-family:inherit;line-height:in
  .mobile-ticket-bar>div{min-width:0;flex:1}.mobile-ticket-bar>div>span{display:block;font-size:9px;letter-spacing:.07em;color:#8c6574;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}.mobile-ticket-bar strong{display:block;font-size:11px;font-weight:500;line-height:1.4}.mobile-ticket-bar .btn{min-height:44px;padding:11px 19px;font-size:10px;gap:15px;flex-shrink:0;max-width:61%;white-space:nowrap}.mobile-ticket-bar .arrow svg{width:17px;height:17px}
  body.modal-open .mobile-ticket-bar{visibility:hidden}
 }
+
+.eventbrite-fallback[hidden]{display:none!important}
+
+.eventbrite-dialog{width:min(960px,calc(100vw - 32px));max-width:960px}.eventbrite-frame{min-height:540px;margin:20px 0}.eventbrite-frame iframe{max-width:100%;border:0}

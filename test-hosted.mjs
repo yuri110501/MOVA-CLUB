@@ -69,19 +69,18 @@ test('Home migration leaves an existing real gallery intact',async()=>{
  const r=(await call('/api/public',{user:null})).data.state;assert.equal(r.gallery.length,1);assert.equal(r.gallery[0].caption.en,'Our event');
 });
 
-test('Draft saves never change the public version; reviewed publishing does',async()=>{
+test('Draft saves never change the public version; direct confirmed publishing does',async()=>{
  const before=(await call('/api/public',{user:null})).data;const d=await doc();d.state.content.aboutTitle.en='QA DRAFT ONLY';
  const saved=await call('/api/admin/state',{data:d});assert.equal(saved.status,200);assert.equal(saved.data.hasDraft,true);
  const live=(await call('/api/public',{user:null})).data;assert.equal(live.revision,before.revision);assert.notEqual(live.state.content.aboutTitle.en,'QA DRAFT ONLY');
- assert.equal((await call('/api/admin/publish',{data:{revision:saved.data.revision,publishedRevision:saved.data.publishedRevision}})).status,409);
- assert.equal((await publishCurrent()).status,200);const after=(await call('/api/public',{user:null})).data;assert.equal(after.state.content.aboutTitle.en,'QA DRAFT ONLY');assert.equal(after.revision,before.revision+1);
+ assert.equal((await call('/api/admin/publish',{data:{revision:saved.data.revision,publishedRevision:saved.data.publishedRevision}})).status,200);const after=(await call('/api/public',{user:null})).data;assert.equal(after.state.content.aboutTitle.en,'QA DRAFT ONLY');assert.equal(after.revision,before.revision+1);
 });
 test('Private draft previews require an active administrative account',async()=>{
  assert.equal((await call('/api/admin/preview-state',{user:null})).status,401);assert.equal((await call('/api/admin/preview-state',{user:ana})).status,403);
  const d=await doc();d.state.content.aboutTitle.en='PRIVATE PREVIEW';await call('/api/admin/state',{data:d});const preview=await call('/api/admin/preview-state');assert.equal(preview.data.state.content.aboutTitle.en,'PRIVATE PREVIEW');assert.equal(preview.data.editorPreview,true);assert.equal(preview.headers.get('Cache-Control'),'no-store');
 });
-test('A later draft save invalidates a previously reviewed preview',async()=>{
- const d=await doc();d.state.content.aboutTitle.en='First draft';await call('/api/admin/state',{data:d});await call('/api/admin/preview-state');const a=await doc();a.state.content.aboutTitle.en='Changed after preview';await call('/api/admin/state',{data:a});const current=await doc();assert.equal(current.reviewed,false);assert.equal((await call('/api/admin/publish',{data:{revision:current.revision,publishedRevision:current.publishedRevision}})).status,409);
+test('Preview remains optional after a later draft save',async()=>{
+ const d=await doc();d.state.content.aboutTitle.en='First draft';await call('/api/admin/state',{data:d});await call('/api/admin/preview-state');const a=await doc();a.state.content.aboutTitle.en='Changed after preview';await call('/api/admin/state',{data:a});const current=await doc();assert.equal(current.reviewed,false);assert.equal((await call('/api/admin/publish',{data:{revision:current.revision,publishedRevision:current.publishedRevision}})).status,200);
 });
 test('Incomplete gallery entries remain saved in drafts and are omitted from preview',async()=>{
  const d=await doc();d.state.gallery.push({image:'',caption:{en:'',pt:''},active:true});assert.equal((await call('/api/admin/state',{data:d})).status,200);assert.equal((await doc()).state.gallery.length,d.state.gallery.length);const p=await call('/api/admin/preview-state');assert.equal(p.data.state.gallery.length,d.state.gallery.length-1);assert.equal((await publishCurrent()).status,400);
@@ -94,4 +93,41 @@ test('Restoring history modifies the draft and leaves the public version intact'
 });
 test('Support cannot publish legal changes left in a shared draft by the owner',async()=>{
  const d=await doc();d.state.legal.terms.body.en+=' QA LEGAL DRAFT';await call('/api/admin/state',{data:d});const token=await invite();await call('/api/invite/accept',{user:support,data:{token}});const session=(await call('/api/session',{user:support})).data;assert.equal((await publishCurrent(support,session.csrf)).status,403);
+});
+
+test('The development credit cannot be replaced through the CMS API',async()=>{
+ const d=await doc();d.state.content.credit='Unapproved replacement';assert.equal((await call('/api/admin/state',{data:d})).status,403);
+ const s=structuredClone(seed);s.content.credit='Historical replacement';assert.equal(publicState(s).content.credit,'Designed by Venancio Neto');
+});
+test('Direct publishing still requires authentication and CSRF',async()=>{
+ const d=await doc();d.state.content.aboutTitle.en='Direct publish';const saved=(await call('/api/admin/state',{data:d})).data;const data={revision:saved.revision,publishedRevision:saved.publishedRevision};
+ assert.equal((await call('/api/admin/publish',{user:null,data})).status,401);assert.equal((await call('/api/admin/publish',{data,csrfToken:''})).status,403);
+ assert.equal((await call('/api/public',{user:null})).data.state.content.aboutTitle.en,seed.content.aboutTitle.en);
+});
+
+test('Eventbrite URLs saved in the Admin connect the matching public event after publication',async()=>{
+ const d=await doc();d.state.events[0].eventbriteUrl='https://www.eventbrite.com/e/2003621624214/';d.state.events[0].eventbritePromoCode='teste';d.state.events[0].eventbriteTestMode=true;
+ const second=structuredClone(d.state.events[0]);second.id='second-event';second.date='2030-01-01';second.eventbriteUrl='https://www.eventbrite.com/e/1234567890123/';second.eventbritePromoCode='';second.eventbriteTestMode=false;d.state.events.push(second);
+ assert.equal((await call('/api/admin/state',{data:d})).status,200);assert.equal((await publishCurrent()).status,200);
+ const events=(await call('/api/public',{user:null})).data.state.events;assert.equal(events[0].checkout.eventId,'2003621624214');assert.equal(events[0].checkout.promoCode,'teste');assert.equal(events[0].checkout.testMode,true);assert.equal(events[1].checkout.eventId,'1234567890123');assert.equal(events[1].checkout.promoCode,'');assert.equal(events[1].checkout.testMode,false);
+});
+test('Malformed Eventbrite links cannot be saved, and old invalid links do not break the public site',async()=>{
+ const d=await doc();d.state.events[0].eventbriteUrl='https://www.eventbrite.com/';assert.equal((await call('/api/admin/state',{data:d})).status,400);
+ assert.equal(publicState(d.state).events[0].checkout,null);
+});
+
+test('Checkout setup preserves pending draft text and does not publish it',async()=>{
+ const live=JSON.parse(db.raw.prepare('SELECT body FROM mova_documents WHERE id=1').get().body);live.events[0].eventbriteUrl='';delete live.events[0].eventbritePromoCode;delete live.events[0].eventbriteTestMode;
+ const d=await doc();d.state=structuredClone(live);d.state.content.aboutTitle.en='UNPUBLISHED PRIVATE CONTENT';
+ db.raw.prepare('UPDATE mova_documents SET body=? WHERE id=1').run(JSON.stringify(live));db.raw.prepare('UPDATE mova_drafts SET body=? WHERE id=1').run(JSON.stringify(d.state));db.raw.prepare('DELETE FROM mova_meta WHERE key=?').run('ticketing_setup_v7');
+ const before=d.publishedRevision,publicResult=(await call('/api/public',{user:null})).data,after=await doc();
+ assert.equal(publicResult.revision,before+1);assert.notEqual(publicResult.state.content.aboutTitle.en,'UNPUBLISHED PRIVATE CONTENT');assert.equal(publicResult.state.events[0].checkout.eventId,'2003621624214');
+ assert.equal(after.state.content.aboutTitle.en,'UNPUBLISHED PRIVATE CONTENT');assert.equal(after.hasDraft,true);assert.equal(after.baseRevision,publicResult.revision);assert.equal(after.state.events[0].eventbritePromoCode,'teste');
+ assert.equal((await call('/api/public',{user:null})).data.revision,publicResult.revision);
+});
+test('Checkout setup retains a separately edited Eventbrite link in the pending draft',async()=>{
+ const live=JSON.parse(db.raw.prepare('SELECT body FROM mova_documents WHERE id=1').get().body);live.events[0].eventbriteUrl='';delete live.events[0].eventbritePromoCode;delete live.events[0].eventbriteTestMode;
+ const d=await doc();d.state=structuredClone(live);d.state.events[0].eventbriteUrl='https://www.eventbrite.com/e/1234567890123/';d.state.events[0].eventbritePromoCode='OTHER';d.state.events[0].eventbriteTestMode=false;
+ db.raw.prepare('UPDATE mova_documents SET body=? WHERE id=1').run(JSON.stringify(live));db.raw.prepare('UPDATE mova_drafts SET body=? WHERE id=1').run(JSON.stringify(d.state));db.raw.prepare('DELETE FROM mova_meta WHERE key=?').run('ticketing_setup_v7');
+ assert.equal((await call('/api/public',{user:null})).data.state.events[0].checkout.eventId,'2003621624214');const after=await doc();assert.equal(after.state.events[0].eventbriteUrl,'https://www.eventbrite.com/e/1234567890123/');assert.equal(after.state.events[0].eventbritePromoCode,'OTHER');assert.equal(after.state.events[0].eventbriteTestMode,false);
 });
