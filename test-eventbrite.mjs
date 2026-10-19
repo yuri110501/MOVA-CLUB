@@ -8,7 +8,7 @@ const config=eventbriteCheckout({eventbriteUrl:'https://www.eventbrite.com/e/200
 
 function fixture(){
  const scripts=[],elements=new Map(),widgets=[],events=[];
- const context={setTimeout,clearTimeout,Promise,Error,Object,CustomEvent:class{constructor(type){this.type=type}},document:{
+ const context={setTimeout,clearTimeout,Promise,Error,Object,URL,CustomEvent:class{constructor(type){this.type=type}},document:{
   head:{append:el=>scripts.push(el)},body:{append:el=>elements.set(el.id,el)},getElementById:id=>elements.get(id),
   createElement:tag=>({tag,setAttribute(){},remove(){this.removed=true},click(){this.clicks=(this.clicks||0)+1}})
  }};
@@ -49,4 +49,22 @@ test('Each event opens its own widget without inheriting another event coupon',a
 });
 test('An event without a valid checkout configuration does not load third-party code',async()=>{
  const f=fixture();await assert.rejects(f.context.MovaTicketing.prepare(null));assert.equal(f.scripts.length,0);
+});
+
+test('A visitor coupon reaches the widget and fallback without changing the event configuration',async()=>{
+ const f=fixture(),original=eventbriteCheckout({eventbriteUrl:'https://www.eventbrite.com/e/2003621624214/?aff=mova'});
+ const chosen=f.context.MovaTicketing.withPromoCode(original,'  teste  ');
+ assert.equal(chosen.promoCode,'teste');assert.equal(new URL(chosen.url).searchParams.get('discount'),'teste');assert.equal(new URL(chosen.url).searchParams.get('aff'),'mova');assert.equal(original.promoCode,'');assert.equal(new URL(original.url).searchParams.has('discount'),false);
+ const loading=f.context.MovaTicketing.prepare(chosen);f.ready();const mount=await loading;f.elements.set('visitor-frame',{});mount('visitor-frame');assert.equal(f.widgets[0].promoCode,'teste');
+});
+
+test('A blank visitor coupon removes a prefilled discount from both widget and fallback',async()=>{
+ const f=fixture(),chosen=f.context.MovaTicketing.withPromoCode(config,'   ');
+ assert.equal(chosen.promoCode,'');assert.equal(new URL(chosen.url).searchParams.has('discount'),false);assert.equal(config.promoCode,'teste');
+ const loading=f.context.MovaTicketing.prepare(chosen);f.ready();const mount=await loading;f.elements.set('full-price-frame',{});mount('full-price-frame');assert.equal(f.widgets[0].promoCode,undefined);
+});
+
+test('Visitor coupon validation rejects control characters and oversized codes',()=>{
+ const f=fixture();assert.throws(()=>f.context.MovaTicketing.withPromoCode(config,'a'.repeat(101)));assert.throws(()=>f.context.MovaTicketing.withPromoCode(config,'test\ncode'));assert.throws(()=>f.context.MovaTicketing.withPromoCode(null,'teste'));
+ const chosen=f.context.MovaTicketing.withPromoCode(config,'A&B #1');assert.equal(new URL(chosen.url).searchParams.get('discount'),'A&B #1');
 });

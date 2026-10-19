@@ -1,4 +1,4 @@
-/* Official Eventbrite modal integration. No attendee or card data reaches MOVA. */
+/* Official Eventbrite checkout integration. No attendee or card data reaches MOVA. */
 (()=>{
  const scriptURL='https://www.eventbrite.com/static/widgets/eb_widgets.js';
  let loading=null;
@@ -30,5 +30,13 @@
   };
  }
  const supports=config=>!!config&&typeof config.eventId==='string'&&/^\d{6,24}$/.test(config.eventId);
- window.MovaTicketing=Object.freeze({supports,prepare});
+ function withPromoCode(config,value){
+  if(!supports(config)||typeof value!=='string')throw Error('Invalid checkout configuration');
+  const promoCode=value.trim();
+  if(promoCode.length>100||/[\x00-\x1f\x7f]/.test(promoCode))throw Error('Invalid promo code');
+  const url=new URL(config.url);
+  if(promoCode)url.searchParams.set('discount',promoCode);else url.searchParams.delete('discount');
+  return {...config,promoCode,url:url.toString()};
+ }
+ window.MovaTicketing=Object.freeze({supports,prepare,withPromoCode});
 })();
