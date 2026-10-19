@@ -116,18 +116,19 @@ test('Malformed Eventbrite links cannot be saved, and old invalid links do not b
  assert.equal(publicState(d.state).events[0].checkout,null);
 });
 
-test('Checkout setup preserves pending draft text and does not publish it',async()=>{
- const live=JSON.parse(db.raw.prepare('SELECT body FROM mova_documents WHERE id=1').get().body);live.events[0].eventbriteUrl='';delete live.events[0].eventbritePromoCode;delete live.events[0].eventbriteTestMode;
+test('Removing the automatic coupon preserves pending draft text and does not publish it',async()=>{
+ const live=JSON.parse(db.raw.prepare('SELECT body FROM mova_documents WHERE id=1').get().body);live.events[0].eventbriteUrl='https://www.eventbrite.com/e/2003621624214/?discount=teste';live.events[0].eventbritePromoCode='teste';live.events[0].eventbriteTestMode=true;
  const d=await doc();d.state=structuredClone(live);d.state.content.aboutTitle.en='UNPUBLISHED PRIVATE CONTENT';
- db.raw.prepare('UPDATE mova_documents SET body=? WHERE id=1').run(JSON.stringify(live));db.raw.prepare('UPDATE mova_drafts SET body=? WHERE id=1').run(JSON.stringify(d.state));db.raw.prepare('DELETE FROM mova_meta WHERE key=?').run('ticketing_setup_v7');
+ db.raw.prepare('UPDATE mova_documents SET body=? WHERE id=1').run(JSON.stringify(live));db.raw.prepare('UPDATE mova_drafts SET body=? WHERE id=1').run(JSON.stringify(d.state));db.raw.prepare('DELETE FROM mova_meta WHERE key=?').run('ticketing_setup_v8');
  const before=d.publishedRevision,publicResult=(await call('/api/public',{user:null})).data,after=await doc();
  assert.equal(publicResult.revision,before+1);assert.notEqual(publicResult.state.content.aboutTitle.en,'UNPUBLISHED PRIVATE CONTENT');assert.equal(publicResult.state.events[0].checkout.eventId,'2003621624214');
- assert.equal(after.state.content.aboutTitle.en,'UNPUBLISHED PRIVATE CONTENT');assert.equal(after.hasDraft,true);assert.equal(after.baseRevision,publicResult.revision);assert.equal(after.state.events[0].eventbritePromoCode,'teste');
+ assert.equal(after.state.content.aboutTitle.en,'UNPUBLISHED PRIVATE CONTENT');assert.equal(after.hasDraft,true);assert.equal(after.baseRevision,publicResult.revision);assert.equal(after.state.events[0].eventbritePromoCode,'');
+ assert.equal(publicResult.state.events[0].checkout.promoCode,'');assert.equal(new URL(publicResult.state.events[0].checkout.url).searchParams.has('discount'),false);assert.equal(after.state.events[0].eventbriteUrl,'https://www.eventbrite.com/e/2003621624214/');
  assert.equal((await call('/api/public',{user:null})).data.revision,publicResult.revision);
 });
 test('Checkout setup retains a separately edited Eventbrite link in the pending draft',async()=>{
  const live=JSON.parse(db.raw.prepare('SELECT body FROM mova_documents WHERE id=1').get().body);live.events[0].eventbriteUrl='';delete live.events[0].eventbritePromoCode;delete live.events[0].eventbriteTestMode;
  const d=await doc();d.state=structuredClone(live);d.state.events[0].eventbriteUrl='https://www.eventbrite.com/e/1234567890123/';d.state.events[0].eventbritePromoCode='OTHER';d.state.events[0].eventbriteTestMode=false;
- db.raw.prepare('UPDATE mova_documents SET body=? WHERE id=1').run(JSON.stringify(live));db.raw.prepare('UPDATE mova_drafts SET body=? WHERE id=1').run(JSON.stringify(d.state));db.raw.prepare('DELETE FROM mova_meta WHERE key=?').run('ticketing_setup_v7');
+ db.raw.prepare('UPDATE mova_documents SET body=? WHERE id=1').run(JSON.stringify(live));db.raw.prepare('UPDATE mova_drafts SET body=? WHERE id=1').run(JSON.stringify(d.state));db.raw.prepare('DELETE FROM mova_meta WHERE key=?').run('ticketing_setup_v8');
  assert.equal((await call('/api/public',{user:null})).data.state.events[0].checkout.eventId,'2003621624214');const after=await doc();assert.equal(after.state.events[0].eventbriteUrl,'https://www.eventbrite.com/e/1234567890123/');assert.equal(after.state.events[0].eventbritePromoCode,'OTHER');assert.equal(after.state.events[0].eventbriteTestMode,false);
 });
