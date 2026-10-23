@@ -1,5 +1,5 @@
 import {DatabaseSync} from 'node:sqlite';
-import {readFileSync,readdirSync} from 'node:fs';
+import {readFileSync,readdirSync,existsSync} from 'node:fs';
 import {test,beforeEach,afterEach} from 'node:test';
 import assert from 'node:assert/strict';
 import {handleAPI,instant,publicState,validateImage,uploadedResponse,validateState} from './lib/core.mjs';
@@ -159,4 +159,10 @@ test('Public cleanup updates only legacy copy and preserves every pending photo 
  assert.ok(live.state.legal.privacy.body.en.includes('Eventbrite'));
  const draft=await doc();assert.equal(draft.state.content.heroImage,original.state.content.heroImage);assert.equal(draft.state.content.aboutTitle.pt,'Texto preservado');assert.equal(draft.baseRevision,live.revision);
  assert.equal((await call('/api/public',{user:null})).data.revision,live.revision);
+});
+
+test('Legacy Admin has no public HTML alias that bypasses the retired route',()=>{
+ assert.equal(existsSync(new URL('./public/admin.html',import.meta.url)),false);
+ assert.match(readFileSync(new URL('./app/admin/route.ts',import.meta.url),'utf8'),/status:404/);
+ assert.match(readFileSync(new URL('./app/admin/[...path]/route.ts',import.meta.url),'utf8'),/status:404/);
 });
