@@ -31,7 +31,7 @@ async function call(path,{user=host,data,headers={},raw,csrfToken=csrf}={}){
 async function doc(user=host){return (await call('/api/admin/state',{user})).data}
 async function publishCurrent(user=host,csrfToken=csrf){const d=await doc(user);await call('/api/admin/preview-state',{user});return call('/api/admin/publish',{user,csrfToken,data:{revision:d.revision,publishedRevision:d.publishedRevision}})}
 async function invite(role='support',name='QA support'){const r=await call('/api/admin/invite',{data:{role,name}});assert.equal(r.status,201);return r.data.inviteUrl.split('#')[1]}
-beforeEach(async()=>{db=new DB();env={DB:db,BUCKET:new Bucket(),MOVA_PUBLIC_ORIGIN:'https://mova.test',MOVA_BOOTSTRAP_OWNER_EMAIL:host.email};const session=await call('/api/session');assert.equal(session.status,200);csrf=session.data.csrf});
+beforeEach(async()=>{db=new DB();env={MOVA_SKIP_COPY_UPDATE:'1',DB:db,BUCKET:new Bucket(),MOVA_PUBLIC_ORIGIN:'https://mova.test',MOVA_BOOTSTRAP_OWNER_EMAIL:host.email};const session=await call('/api/session');assert.equal(session.status,200);csrf=session.data.csrf});
 afterEach(()=>db.close());
 test('Public site works anonymously; private data is excluded',async()=>{const r=await call('/api/public',{user:null});assert.equal(r.status,200);assert.equal(r.data.state.events[0].name.en,'The First Move');assert.equal(r.data.state.sponsors.length,2);assert.equal(r.data.state.gallery.length,4);assert.ok(r.data.state.content.anaBody.en.includes('Bianca Marte'));assert.ok(!JSON.stringify(r.data).includes(host.email))});
 test('Missing identity cannot read or write admin state',async()=>{assert.equal((await call('/api/admin/state',{user:null})).status,401);assert.equal((await call('/api/admin/state',{user:null,data:{}})).status,401)});
@@ -45,8 +45,8 @@ test('No-event and no-sponsor public state is empty',async()=>{const d=await doc
 test('Nonexistent and ambiguous DST times are rejected',()=>{const e=structuredClone(seed.events[0]);e.date='2027-03-14';e.start='02:30';assert.throws(()=>instant(e));e.date='2026-11-01';e.start='01:30';assert.throws(()=>instant(e))});
 test('Support invitations require individual identity and are single use',async()=>{const token=await invite();assert.equal((await call('/api/invite/accept',{user:null,data:{token}})).status,401);assert.equal((await call('/api/invite/accept',{user:support,data:{token}})).status,200);assert.equal((await call('/api/invite/accept',{user:support,data:{token}})).status,400);const s=await call('/api/session',{user:support});assert.equal(s.data.user.role,'support')});
 test('Support can edit content but cannot edit legal or users',async()=>{const token=await invite();await call('/api/invite/accept',{user:support,data:{token}});const session=(await call('/api/session',{user:support})).data;const d=await doc(support);d.state.content.aboutBody.pt='QA edit';assert.equal((await call('/api/admin/state',{user:support,data:d,csrfToken:session.csrf})).status,200);const legal=await doc(support);legal.state.legal.image.body.pt='QA forbidden edit';assert.equal((await call('/api/admin/state',{user:support,data:legal,csrfToken:session.csrf})).status,403);assert.equal((await call('/api/admin/users',{user:support})).status,403)});
-test('Ana ownership transfer demotes support; revocation cannot rebootstrap',async()=>{const token=await invite('owner','QA Ana');assert.equal((await call('/api/invite/accept',{user:ana,data:{token}})).status,200);const a=(await call('/api/session',{user:ana})).data;assert.equal(a.user.role,'owner');assert.equal((await call('/api/session')).data.user.role,'support');assert.equal((await call('/api/admin/revoke',{user:ana,data:{id:host.userId},csrfToken:a.csrf})).status,200);assert.equal((await call('/api/session')).data.user,null);assert.equal((await call('/api/admin/state')).status,403)});
-test('Owner transfer invalidates other owner invitations',async()=>{const one=await invite('owner','QA Ana'),two=await invite('owner','QA other');await call('/api/invite/accept',{user:ana,data:{token:one}});assert.equal((await call('/api/invite/accept',{user:support,data:{token:two}})).status,400)});
+test('Additional administrators retain equal management access; revocation cannot rebootstrap',async()=>{const token=await invite('owner','QA Ana');assert.equal((await call('/api/invite/accept',{user:ana,data:{token}})).status,200);const a=(await call('/api/session',{user:ana})).data;assert.equal(a.user.role,'owner');assert.equal((await call('/api/session')).data.user.role,'owner');assert.equal((await call('/api/admin/revoke',{user:ana,data:{id:host.userId},csrfToken:a.csrf})).status,200);assert.equal((await call('/api/session')).data.user,null);assert.equal((await call('/api/admin/state')).status,403)});
+test('Ana and Bianca can both accept separate administrator invitations',async()=>{const one=await invite('owner','QA Ana'),two=await invite('owner','QA other');await call('/api/invite/accept',{user:ana,data:{token:one}});assert.equal((await call('/api/invite/accept',{user:support,data:{token:two}})).status,200);assert.equal((await call('/api/session',{user:ana})).data.user.role,'owner');assert.equal((await call('/api/session',{user:support})).data.user.role,'owner')});
 test('Expired invitation grants no access',async()=>{const token=await invite();db.raw.exec('UPDATE mova_invitations SET expires=0');assert.equal((await call('/api/invite/accept',{user:support,data:{token}})).status,400);assert.equal((await call('/api/session',{user:support})).data.user,null)});
 test('Valid uploaded PNG survives in file storage and correct MIME',async()=>{const png=readFileSync(new URL('./public/assets/logo-header-pink.png',import.meta.url));const r=await call('/api/admin/upload',{raw:png});assert.equal(r.status,201);const response=await uploadedResponse(r.data.url.split('/').at(-1),env);assert.equal(response.status,200);assert.equal(response.headers.get('Content-Type'),'image/png');assert.ok((await response.arrayBuffer()).byteLength>100)});
 test('WebP dimensions and metadata parsing',()=>{const webp=readFileSync(new URL('./public/assets/fitness-concept.webp',import.meta.url));const r=validateImage(webp,'image/webp');assert.equal(r.width,704);assert.equal(r.height,340)});
@@ -131,4 +131,32 @@ test('Checkout setup retains a separately edited Eventbrite link in the pending 
  const d=await doc();d.state=structuredClone(live);d.state.events[0].eventbriteUrl='https://www.eventbrite.com/e/1234567890123/';d.state.events[0].eventbritePromoCode='OTHER';d.state.events[0].eventbriteTestMode=false;
  db.raw.prepare('UPDATE mova_documents SET body=? WHERE id=1').run(JSON.stringify(live));db.raw.prepare('UPDATE mova_drafts SET body=? WHERE id=1').run(JSON.stringify(d.state));db.raw.prepare('DELETE FROM mova_meta WHERE key=?').run('ticketing_setup_v8');
  assert.equal((await call('/api/public',{user:null})).data.state.events[0].checkout.eventId,'2003621624214');const after=await doc();assert.equal(after.state.events[0].eventbriteUrl,'https://www.eventbrite.com/e/1234567890123/');assert.equal(after.state.events[0].eventbritePromoCode,'OTHER');assert.equal(after.state.events[0].eventbriteTestMode,false);
+});
+
+test('Administrators cannot revoke themselves or lose admin rights by accepting an editor invitation',async()=>{
+ assert.equal((await call('/api/admin/revoke',{data:{id:host.userId}})).status,400);
+ const token=await invite('support','Existing admin');await call('/api/invite/accept',{data:{token}});
+ assert.equal((await call('/api/session')).data.user.role,'owner');
+});
+test('Photo framing persists separately for desktop and phone and rejects unsafe metadata',async()=>{
+ const d=await doc();d.state.content.heroImageFrame={desktop:{x:30,y:80,zoom:1.6},mobile:{x:70,y:40,zoom:2}};
+ assert.equal((await call('/api/admin/state',{data:d})).status,200);assert.equal((await publishCurrent()).status,200);
+ assert.deepEqual((await call('/api/public',{user:null})).data.state.content.heroImageFrame,d.state.content.heroImageFrame);
+ for(const value of [-1,101,'50; color:red']){const a=await doc();a.state.content.heroImageFrame.desktop.x=value;assert.equal((await call('/api/admin/state',{data:a})).status,400)}
+ const a=await doc();a.state.content.heroImageFrame.mobile.zoom=4;assert.equal((await call('/api/admin/state',{data:a})).status,400);
+});
+test('Portable content backup preserves published and pending content without identities or tokens',async()=>{
+ const d=await doc();d.state.content.aboutTitle.en='Unpublished text';await call('/api/admin/state',{data:d});
+ const backup=await call('/api/admin/backup');assert.equal(backup.status,200);assert.equal(backup.data.format,'mova-portable-v1');assert.equal(backup.data.draft.state.content.aboutTitle.en,'Unpublished text');assert.notEqual(backup.data.published.state.content.aboutTitle.en,'Unpublished text');
+ assert.ok(!JSON.stringify(backup.data).includes(host.email));assert.ok(!JSON.stringify(backup.data).includes(csrf));assert.equal((await call('/api/admin/backup',{user:null})).status,401);
+ const token=await invite();await call('/api/invite/accept',{user:support,data:{token}});assert.equal((await call('/api/admin/backup',{user:support})).status,403);
+});
+
+test('Public cleanup updates only legacy copy and preserves every pending photo and edit',async()=>{
+ const original=await doc();original.state.content.heroImage='/uploads/12345678901234567890123456789012.jpg';original.state.content.aboutTitle.pt='Texto preservado';await call('/api/admin/state',{data:original});
+ delete env.MOVA_SKIP_COPY_UPDATE;const live=(await call('/api/public',{user:null})).data;
+ assert.ok(!live.state.legal.terms.body.en.includes('DRAFT FOR REVIEW'));
+ assert.ok(live.state.legal.privacy.body.en.includes('Eventbrite'));
+ const draft=await doc();assert.equal(draft.state.content.heroImage,original.state.content.heroImage);assert.equal(draft.state.content.aboutTitle.pt,'Texto preservado');assert.equal(draft.baseRevision,live.revision);
+ assert.equal((await call('/api/public',{user:null})).data.revision,live.revision);
 });
