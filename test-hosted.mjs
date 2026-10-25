@@ -31,7 +31,7 @@ async function call(path,{user=host,data,headers={},raw,csrfToken=csrf}={}){
 async function doc(user=host){return (await call('/api/admin/state',{user})).data}
 async function publishCurrent(user=host,csrfToken=csrf){const d=await doc(user);await call('/api/admin/preview-state',{user});return call('/api/admin/publish',{user,csrfToken,data:{revision:d.revision,publishedRevision:d.publishedRevision}})}
 async function invite(role='support',name='QA support'){const r=await call('/api/admin/invite',{data:{role,name}});assert.equal(r.status,201);return r.data.inviteUrl.split('#')[1]}
-beforeEach(async()=>{db=new DB();env={MOVA_SKIP_OFFICIAL_UPDATE:'1',MOVA_SKIP_COPY_UPDATE:'1',DB:db,BUCKET:new Bucket(),MOVA_PUBLIC_ORIGIN:'https://mova.test',MOVA_BOOTSTRAP_OWNER_EMAIL:host.email};const session=await call('/api/session');assert.equal(session.status,200);csrf=session.data.csrf});
+beforeEach(async()=>{db=new DB();env={MOVA_SKIP_REFUND_UPDATE:'1',MOVA_SKIP_OFFICIAL_UPDATE:'1',MOVA_SKIP_COPY_UPDATE:'1',DB:db,BUCKET:new Bucket(),MOVA_PUBLIC_ORIGIN:'https://mova.test',MOVA_BOOTSTRAP_OWNER_EMAIL:host.email};const session=await call('/api/session');assert.equal(session.status,200);csrf=session.data.csrf});
 afterEach(()=>db.close());
 test('Public site works anonymously; private data is excluded',async()=>{const r=await call('/api/public',{user:null});assert.equal(r.status,200);assert.equal(r.data.state.events[0].name.en,'The First Move');assert.equal(r.data.state.sponsors.length,2);assert.equal(r.data.state.gallery.length,4);assert.ok(r.data.state.content.anaBody.en.includes('Bianca Marte'));assert.ok(!JSON.stringify(r.data).includes(host.email))});
 test('Missing identity cannot read or write admin state',async()=>{assert.equal((await call('/api/admin/state',{user:null})).status,401);assert.equal((await call('/api/admin/state',{user:null,data:{}})).status,401)});
@@ -176,4 +176,12 @@ test('Official event update connects the real checkout and preserves photos and 
 });
 test('Door times after the event starts cannot be published',async()=>{
  const d=await doc();d.state.events[0].doors='23:00';assert.equal((await call('/api/admin/state',{data:d})).status,200);assert.equal((await publishCurrent()).status,400);
+});
+
+test('Non-refundable policy updates event, FAQ and terms while retaining unrelated live and draft data',async()=>{
+ const d=await doc();d.state.events[0].id='event-14fa371d';d.state.content.heroImage='/uploads/12345678901234567890123456789012.jpg';await call('/api/admin/state',{data:d});await publishCurrent();
+ const pending=await doc();pending.state.content.aboutTitle.en='UNPUBLISHED OWNER EDIT';await call('/api/admin/state',{data:pending});
+ delete env.MOVA_SKIP_REFUND_UPDATE;const live=(await call('/api/public',{user:null})).data;
+ assert.equal(live.state.events[0].refundPolicy.en,'Non-refundable tickets');assert.equal(live.state.events[0].refundPolicy.pt,'Ingressos não reembolsáveis');assert.equal(live.state.content.heroImage,d.state.content.heroImage);assert.ok(live.state.legal.terms.body.en.includes('five business days'));assert.ok(live.state.legal.terms.body.pt.includes('direitos obrigatórios'));assert.ok(!live.state.faq.at(-1).answer.en.includes('7 days'));
+ const after=await doc();assert.equal(after.state.content.aboutTitle.en,'UNPUBLISHED OWNER EDIT');assert.notEqual(live.state.content.aboutTitle.en,'UNPUBLISHED OWNER EDIT');assert.equal(after.baseRevision,live.revision);assert.equal((await call('/api/public',{user:null})).data.revision,live.revision);
 });

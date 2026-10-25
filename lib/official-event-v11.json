@@ -1,20 +1,78 @@
 {
- "targetId":"event-14fa371d",
- "fields":{
-  "status":"published","available":true,
-  "name":{"en":"MOVA Experience — The First Move","pt":"MOVA Experience — The First Move"},
-  "date":"2026-11-22","start":"10:00","end":"12:30","doors":"09:45","timezone":"America/New_York",
-  "city":"Orlando, Florida, USA","venue":{"en":"Location to be announced","pt":"Local a anunciar"},"address":"","mapUrl":"",
-  "price":39.19,"currency":"USD","agePolicy":{"en":"All ages","pt":"Todas as idades"},
-  "refundPolicy":{"en":"Refunds up to 7 days before the event","pt":"Reembolso até 7 dias antes do evento"},
-  "description":{"en":"Move your body, meet new women, and enjoy an experience created for you!\n\nThe first MOVA Experience brings together movement, music, brunch, and connection in a welcoming atmosphere filled with positive energy. Take a break from your routine, make time for yourself, and connect with a community of women who support and inspire one another.\n\nWhat to expect:\n• A functional workout to get you moving and feeling energized.\n• Music to set the mood and keep the energy flowing.\n• Brunch to enjoy while sharing conversations.\n• Goodie bags, special gifts, and exciting giveaways from our partner brands.\n• Local brands offering products, experiences, and exclusive perks.\n• New friendships, networking, and meaningful connections.\n\nAll fitness levels are welcome, and you’re welcome to come solo! Move at your own pace and come ready to meet new people.\n\nWear comfortable workout clothes, bring your energy, and take the first step with us!\n\nMOVA Club\nMove. Connect. Belong.","pt":"Movimente o corpo, conheça novas mulheres e viva uma experiência criada para você!\n\nA primeira MOVA Experience reúne movimento, música, brunch e conexão em um ambiente acolhedor e cheio de energia positiva. Faça uma pausa na rotina, reserve um tempo para você e conecte-se com uma comunidade de mulheres que se apoiam e se inspiram.\n\nO que esperar:\n• Um treino funcional para movimentar o corpo e renovar as energias.\n• Música para criar o clima e manter a energia.\n• Brunch para saborear enquanto compartilha boas conversas.\n• Sacolas de brindes, presentes especiais e sorteios das marcas parceiras.\n• Marcas locais com produtos, experiências e benefícios exclusivos.\n• Novas amizades, networking e conexões significativas.\n\nTodos os níveis de condicionamento físico são bem-vindos, e você pode vir sozinha! Respeite seu ritmo e venha conhecer novas pessoas.\n\nVista uma roupa confortável para treinar, traga sua energia e dê o primeiro passo com a gente!\n\nMOVA Club\nMovimente-se. Conecte-se. Faça parte."},
-  "included":{"en":"Your ticket includes all event activities, brunch, and entry into our prize drawings.","pt":"Seu ingresso inclui todas as atividades do evento, brunch e participação nos sorteios."},
-  "eventbriteUrl":"https://www.eventbrite.com/e/movaclub-experience-tickets-2003831016512?aff=oddtdtcreator","eventbritePromoCode":"","eventbriteTestMode":false,
-  "schedule":[
-   {"start":"10:00","end":"10:30","title":{"en":"Check-in","pt":"Check-in"}},
-   {"start":"10:30","end":"11:00","title":{"en":"Meet MOVA and our partners","pt":"Apresentação do MOVA e dos apoiadores"}},
-   {"start":"11:00","end":"11:30","title":{"en":"Functional workout","pt":"Aula de treino funcional"}},
-   {"start":"11:30","end":"12:30","title":{"en":"Brunch and connections","pt":"Brunch e conexões"}}
-  ]
- }
+  "targetId": "event-14fa371d",
+  "fields": {
+    "status": "published",
+    "available": true,
+    "name": {
+      "en": "MOVA Experience — The First Move",
+      "pt": "MOVA Experience — The First Move"
+    },
+    "date": "2026-11-22",
+    "start": "10:00",
+    "end": "12:30",
+    "doors": "09:45",
+    "timezone": "America/New_York",
+    "city": "Orlando, Florida, USA",
+    "venue": {
+      "en": "Location to be announced",
+      "pt": "Local a anunciar"
+    },
+    "address": "",
+    "mapUrl": "",
+    "price": 39.19,
+    "currency": "USD",
+    "agePolicy": {
+      "en": "All ages",
+      "pt": "Todas as idades"
+    },
+    "refundPolicy": {
+      "en": "Non-refundable tickets",
+      "pt": "Ingressos não reembolsáveis"
+    },
+    "description": {
+      "en": "Move your body, meet new women, and enjoy an experience created for you!\n\nThe first MOVA Experience brings together movement, music, brunch, and connection in a welcoming atmosphere filled with positive energy. Take a break from your routine, make time for yourself, and connect with a community of women who support and inspire one another.\n\nWhat to expect:\n• A functional workout to get you moving and feeling energized.\n• Music to set the mood and keep the energy flowing.\n• Brunch to enjoy while sharing conversations.\n• Goodie bags, special gifts, and exciting giveaways from our partner brands.\n• Local brands offering products, experiences, and exclusive perks.\n• New friendships, networking, and meaningful connections.\n\nAll fitness levels are welcome, and you’re welcome to come solo! Move at your own pace and come ready to meet new people.\n\nWear comfortable workout clothes, bring your energy, and take the first step with us!\n\nMOVA Club\nMove. Connect. Belong.",
+      "pt": "Movimente o corpo, conheça novas mulheres e viva uma experiência criada para você!\n\nA primeira MOVA Experience reúne movimento, música, brunch e conexão em um ambiente acolhedor e cheio de energia positiva. Faça uma pausa na rotina, reserve um tempo para você e conecte-se com uma comunidade de mulheres que se apoiam e se inspiram.\n\nO que esperar:\n• Um treino funcional para movimentar o corpo e renovar as energias.\n• Música para criar o clima e manter a energia.\n• Brunch para saborear enquanto compartilha boas conversas.\n• Sacolas de brindes, presentes especiais e sorteios das marcas parceiras.\n• Marcas locais com produtos, experiências e benefícios exclusivos.\n• Novas amizades, networking e conexões significativas.\n\nTodos os níveis de condicionamento físico são bem-vindos, e você pode vir sozinha! Respeite seu ritmo e venha conhecer novas pessoas.\n\nVista uma roupa confortável para treinar, traga sua energia e dê o primeiro passo com a gente!\n\nMOVA Club\nMovimente-se. Conecte-se. Faça parte."
+    },
+    "included": {
+      "en": "Your ticket includes all event activities, brunch, and entry into our prize drawings.",
+      "pt": "Seu ingresso inclui todas as atividades do evento, brunch e participação nos sorteios."
+    },
+    "eventbriteUrl": "https://www.eventbrite.com/e/movaclub-experience-tickets-2003831016512?aff=oddtdtcreator",
+    "eventbritePromoCode": "",
+    "eventbriteTestMode": false,
+    "schedule": [
+      {
+        "start": "10:00",
+        "end": "10:30",
+        "title": {
+          "en": "Check-in",
+          "pt": "Check-in"
+        }
+      },
+      {
+        "start": "10:30",
+        "end": "11:00",
+        "title": {
+          "en": "Meet MOVA and our partners",
+          "pt": "Apresentação do MOVA e dos apoiadores"
+        }
+      },
+      {
+        "start": "11:00",
+        "end": "11:30",
+        "title": {
+          "en": "Functional workout",
+          "pt": "Aula de treino funcional"
+        }
+      },
+      {
+        "start": "11:30",
+        "end": "12:30",
+        "title": {
+          "en": "Brunch and connections",
+          "pt": "Brunch e conexões"
+        }
+      }
+    ]
+  }
 }
