@@ -2,7 +2,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync,readdirSync,existsSync} from 'node:fs';
 import {test,beforeEach,afterEach} from 'node:test';
 import assert from 'node:assert/strict';
-import {handleAPI,instant,publicState,validateImage,uploadedResponse,validateState} from './lib/core.mjs';
+import {handleAPI,instant,publicState,validateImage,uploadedResponse,validateState,pageResponse} from './lib/core.mjs';
 import seed from './lib/seed.json' with {type:'json'};
 
 class Query{
@@ -50,6 +50,31 @@ test('Ana and Bianca can both accept separate administrator invitations',async()
 test('Expired invitation grants no access',async()=>{const token=await invite();db.raw.exec('UPDATE mova_invitations SET expires=0');assert.equal((await call('/api/invite/accept',{user:support,data:{token}})).status,400);assert.equal((await call('/api/session',{user:support})).data.user,null)});
 test('Valid uploaded PNG survives in file storage and correct MIME',async()=>{const png=readFileSync(new URL('./public/assets/logo-header-pink.png',import.meta.url));const r=await call('/api/admin/upload',{raw:png});assert.equal(r.status,201);const response=await uploadedResponse(r.data.url.split('/').at(-1),env);assert.equal(response.status,200);assert.equal(response.headers.get('Content-Type'),'image/png');assert.ok((await response.arrayBuffer()).byteLength>100)});
 test('WebP dimensions and metadata parsing',()=>{const webp=readFileSync(new URL('./public/assets/fitness-concept.webp',import.meta.url));const r=validateImage(webp,'image/webp');assert.equal(r.width,704);assert.equal(r.height,340)});
+
+test('Custom domain upload accepts its configured origin and persists through draft and public reload',async()=>{
+ const origin='https://www.movacluborlando.com';env.MOVA_PUBLIC_ORIGIN=origin;
+ const file=new URL('../Imagens/Mova Club/DSC05876.jpg',import.meta.url);
+ assert.ok(existsSync(file),'Original regression photo must be available');
+ const jpg=readFileSync(file),headers={Origin:origin,'Content-Type':'image/jpeg'};
+ const rejected=await call('/api/admin/upload',{raw:jpg,headers:{...headers,Origin:'https://evil.test'}});assert.equal(rejected.status,403);
+ const upload=await call('/api/admin/upload',{raw:jpg,headers});assert.equal(upload.status,201);assert.equal(upload.data.width,2832);assert.equal(upload.data.height,2696);
+ const before=await doc(),originalImages=before.state.gallery.map(p=>p.image);
+ before.state.gallery.push({image:upload.data.url,caption:{en:'Regression photo',pt:'Foto de regressão'},active:true});
+ assert.equal((await call('/api/admin/state',{data:before,headers:{Origin:origin}})).status,200);
+ const saved=await doc();assert.equal(saved.state.gallery.at(-1).image,upload.data.url);
+ assert.equal((await call('/api/admin/publish',{data:{revision:saved.revision,publishedRevision:saved.publishedRevision},headers:{Origin:origin}})).status,200);
+ for(let i=0;i<2;i++){
+  const current=(await call('/api/public',{user:null})).data.state;
+  assert.deepEqual(current.gallery.slice(0,-1).map(p=>p.image),originalImages);
+  assert.equal(current.gallery.at(-1).image,upload.data.url);
+  const response=await uploadedResponse(upload.data.url.split('/').at(-1),env);assert.equal(response.status,200);assert.equal(response.headers.get('Content-Type'),'image/jpeg');assert.ok((await response.arrayBuffer()).byteLength>0);
+ }
+});
+
+test('Admin allows local photo previews while public pages retain their image policy',()=>{
+ assert.match(pageResponse('<script src="/admin.js"></script>').headers.get('Content-Security-Policy'),/img-src 'self' data: blob:/);
+ assert.doesNotMatch(pageResponse('<script src="/site.js?v=13"></script>').headers.get('Content-Security-Policy'),/blob:/);
+});
 test('Executable, fake, oversized and mismatched uploads are rejected',async()=>{assert.equal((await call('/api/admin/upload',{raw:new TextEncoder().encode('<svg onload="alert(1)">'),headers:{'Content-Type':'image/svg+xml'}})).status,415);assert.equal((await call('/api/admin/upload',{raw:new Uint8Array(9*1024*1024)})).status,413);const png=readFileSync(new URL('./public/assets/logo-header-pink.png',import.meta.url));assert.throws(()=>validateImage(png,'image/jpeg'))});
 test('Restore preserves full history; export omits access records',async()=>{const d=await doc();d.state.content.aboutTitle.en='QA changed';await call('/api/admin/state',{data:d});assert.equal((await call('/api/admin/restore',{data:{target:1,revision:2}})).status,200);assert.equal((await doc()).state.content.aboutTitle.en,seed.content.aboutTitle.en);const e=(await call('/api/admin/export')).data;assert.deepEqual(Object.keys(e).sort(),['revision','state']);assert.ok(!JSON.stringify(e).includes(host.email))});
 test('Unsafe draft links are rejected and missing required images block publication',async()=>{const d=await doc();d.state.content.instagram='javascript:alert(1)';assert.equal((await call('/api/admin/state',{data:d})).status,400);const a=await doc();a.state.content.heroImage='';assert.equal((await call('/api/admin/state',{data:a})).status,200);assert.equal((await publishCurrent()).status,400)});
