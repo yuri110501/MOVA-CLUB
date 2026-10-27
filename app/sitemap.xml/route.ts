@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:workers';
+import { getEnvSafe } from '@/lib/runtime.mjs';
 import { sitemapResponse } from '@/lib/seo.mjs';
 export const dynamic='force-dynamic';
-export function GET(request:Request){return sitemapResponse(request,env)}
+export async function GET(request:Request){return sitemapResponse(request,await getEnvSafe())}
