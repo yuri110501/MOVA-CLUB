@@ -31,7 +31,7 @@ test('Canonical SEO is bilingual, brand-focused and delivered without JavaScript
  const s=publicState(applyLaunchUpdate(fixture()),Date.parse('2026-10-26T00:00:00Z'));
  for(const lang of ['en','pt']){
   const rendered=renderPublicHTML(html,new Request('https://native.example/?lang='+lang),s).html;
-  assert.ok(rendered.includes(brandSEO[lang].description));assert.ok(rendered.includes('https://www.movacluborlando.com/'+(lang==='pt'?'?lang=pt':'')));assert.match(rendered,/hreflang="pt-BR"/);assert.match(rendered,/<main id="main">.*MOVA Club Orlando/s);assert.match(rendered,/mova-initial-state/);assert.match(rendered,/mova-share-v11.png/);assert.doesNotMatch(rendered,/content="noindex/);
+  assert.ok(rendered.includes(brandSEO[lang].description));assert.ok(rendered.includes('https://www.movacluborlando.com/'+(lang==='pt'?'?lang=pt':'')));assert.match(rendered,/hreflang="pt-BR"/);assert.match(rendered,/<main id="main">.*MOVA Club Orlando/s);assert.match(rendered,/mova-initial-state/);assert.match(rendered,/mova-share-vector.png/);assert.doesNotMatch(rendered,/content="noindex/);
  }
  const detail=renderPublicHTML(html,new Request('https://native.example/events/'+launchEventId+'?lang=pt'),s);assert.equal(detail.status,200);assert.match(detail.html,/Treino funcional com Ana Maia/);assert.match(detail.html,/13:00/);
  const missing=renderPublicHTML(html,new Request('https://native.example/events/missing'),s);assert.equal(missing.status,404);assert.match(missing.html,/content="noindex,follow"/);
