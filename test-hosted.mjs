@@ -1,8 +1,9 @@
 import {DatabaseSync} from 'node:sqlite';
-import {readFileSync,readdirSync,existsSync} from 'node:fs';
+import {readFileSync,existsSync} from 'node:fs';
 import {test,beforeEach,afterEach} from 'node:test';
 import assert from 'node:assert/strict';
-import {handleAPI,instant,publicState,validateImage,uploadedResponse,validateState,pageResponse} from './lib/core.mjs';
+import {handleAPI,instant,publicState,validateImage,uploadedResponse,validateState,pageResponse,resetPrepared} from './lib/core.mjs';
+import {SCHEMA} from './lib/schema.mjs';
 import seed from './lib/seed.json' with {type:'json'};
 
 class Query{
@@ -13,7 +14,7 @@ class Query{
  async run(){const result=this.db.prepare(this.sql).run(...this.values);return {success:true,meta:{changes:Number(result.changes)}}}
 }
 class DB{
- constructor(){this.raw=new DatabaseSync(':memory:');for(const file of readdirSync(new URL('./drizzle/',import.meta.url)).filter(f=>f.endsWith('.sql')))this.raw.exec(readFileSync(new URL('./drizzle/'+file,import.meta.url),'utf8'))}
+ constructor(){this.raw=new DatabaseSync(':memory:');for(const sql of SCHEMA)this.raw.exec(sql)}
  prepare(sql){return new Query(this.raw,sql)}
  async batch(statements){this.raw.exec('BEGIN');try{const results=[];for(const s of statements)results.push(await s.run());this.raw.exec('COMMIT');return results}catch(e){this.raw.exec('ROLLBACK');throw e}}
  close(){this.raw.close()}
@@ -29,7 +30,7 @@ async function call(path,{user=host,data,headers={},raw,csrfToken=csrf}={}){
  const response=await handleAPI(new Request('https://mova.test'+path,options),env,user);return {status:response.status,data:await response.json(),headers:response.headers};
 }
 async function doc(user=host){return (await call('/api/admin/state',{user})).data}
-async function publishCurrent(user=host,csrfToken=csrf){const d=await doc(user);await call('/api/admin/preview-state',{user});return call('/api/admin/publish',{user,csrfToken,data:{revision:d.revision,publishedRevision:d.publishedRevision}})}
+async function publishCurrent(user=host,csrfToken=csrf){const d=await doc(user);await call('/api/admin/preview-state',{user});await call('/api/admin/review',{user,csrfToken,data:{revision:d.revision}});return call('/api/admin/publish',{user,csrfToken,data:{revision:d.revision,publishedRevision:d.publishedRevision}})}
 async function invite(role='support',name='QA support'){const r=await call('/api/admin/invite',{data:{role,name}});assert.equal(r.status,201);return r.data.inviteUrl.split('#')[1]}
 beforeEach(async()=>{db=new DB();env={MOVA_SKIP_LAUNCH_UPDATE:'1',MOVA_SKIP_REFUND_UPDATE:'1',MOVA_SKIP_OFFICIAL_UPDATE:'1',MOVA_SKIP_COPY_UPDATE:'1',DB:db,BUCKET:new Bucket(),MOVA_PUBLIC_ORIGIN:'https://mova.test',MOVA_BOOTSTRAP_OWNER_EMAIL:host.email};const session=await call('/api/session');assert.equal(session.status,200);csrf=session.data.csrf});
 afterEach(()=>db.close());
@@ -45,7 +46,7 @@ test('No-event and no-sponsor public state is empty',async()=>{const d=await doc
 test('Nonexistent and ambiguous DST times are rejected',()=>{const e=structuredClone(seed.events[0]);e.date='2027-03-14';e.start='02:30';assert.throws(()=>instant(e));e.date='2026-11-01';e.start='01:30';assert.throws(()=>instant(e))});
 test('Support invitations require individual identity and are single use',async()=>{const token=await invite();assert.equal((await call('/api/invite/accept',{user:null,data:{token}})).status,401);assert.equal((await call('/api/invite/accept',{user:support,data:{token}})).status,200);assert.equal((await call('/api/invite/accept',{user:support,data:{token}})).status,400);const s=await call('/api/session',{user:support});assert.equal(s.data.user.role,'support')});
 test('Support can edit content but cannot edit legal or users',async()=>{const token=await invite();await call('/api/invite/accept',{user:support,data:{token}});const session=(await call('/api/session',{user:support})).data;const d=await doc(support);d.state.content.aboutBody.pt='QA edit';assert.equal((await call('/api/admin/state',{user:support,data:d,csrfToken:session.csrf})).status,200);const legal=await doc(support);legal.state.legal.image.body.pt='QA forbidden edit';assert.equal((await call('/api/admin/state',{user:support,data:legal,csrfToken:session.csrf})).status,403);assert.equal((await call('/api/admin/users',{user:support})).status,403)});
-test('Additional administrators retain equal management access; revocation cannot rebootstrap',async()=>{const token=await invite('owner','QA Ana');assert.equal((await call('/api/invite/accept',{user:ana,data:{token}})).status,200);const a=(await call('/api/session',{user:ana})).data;assert.equal(a.user.role,'owner');assert.equal((await call('/api/session')).data.user.role,'owner');assert.equal((await call('/api/admin/revoke',{user:ana,data:{id:host.userId},csrfToken:a.csrf})).status,200);assert.equal((await call('/api/session')).data.user,null);assert.equal((await call('/api/admin/state')).status,403)});
+test('Additional administrators can revoke other invited admins, while the bootstrap owner is protected',async()=>{const token=await invite('owner','QA Ana'),two=await invite('owner','QA other');assert.equal((await call('/api/invite/accept',{user:ana,data:{token}})).status,200);assert.equal((await call('/api/invite/accept',{user:support,data:{token:two}})).status,200);const a=(await call('/api/session',{user:ana})).data;assert.equal(a.user.role,'owner');assert.equal((await call('/api/session')).data.user.role,'owner');assert.equal((await call('/api/admin/revoke',{user:ana,data:{id:host.userId},csrfToken:a.csrf})).status,403);assert.equal((await call('/api/admin/revoke',{user:ana,data:{id:support.userId},csrfToken:a.csrf})).status,200);assert.equal((await call('/api/session',{user:support})).data.user,null);assert.equal((await call('/api/admin/state',{user:support})).status,403);assert.equal((await call('/api/session')).data.user.role,'owner')});
 test('Ana and Bianca can both accept separate administrator invitations',async()=>{const one=await invite('owner','QA Ana'),two=await invite('owner','QA other');await call('/api/invite/accept',{user:ana,data:{token:one}});assert.equal((await call('/api/invite/accept',{user:support,data:{token:two}})).status,200);assert.equal((await call('/api/session',{user:ana})).data.user.role,'owner');assert.equal((await call('/api/session',{user:support})).data.user.role,'owner')});
 test('Expired invitation grants no access',async()=>{const token=await invite();db.raw.exec('UPDATE mova_invitations SET expires=0');assert.equal((await call('/api/invite/accept',{user:support,data:{token}})).status,400);assert.equal((await call('/api/session',{user:support})).data.user,null)});
 test('Valid uploaded PNG survives in file storage and correct MIME',async()=>{const png=readFileSync(new URL('./public/assets/logo-header-pink.png',import.meta.url));const r=await call('/api/admin/upload',{raw:png});assert.equal(r.status,201);const response=await uploadedResponse(r.data.url.split('/').at(-1),env);assert.equal(response.status,200);assert.equal(response.headers.get('Content-Type'),'image/png');assert.ok((await response.arrayBuffer()).byteLength>100)});
@@ -54,10 +55,11 @@ test('WebP dimensions and metadata parsing',()=>{const webp=readFileSync(new URL
 test('Custom domain upload accepts its configured origin and persists through draft and public reload',async()=>{
  const origin='https://www.movacluborlando.com';env.MOVA_PUBLIC_ORIGIN=origin;
  const file=new URL('../Imagens/Mova Club/DSC05876.jpg',import.meta.url);
- assert.ok(existsSync(file),'Original regression photo must be available');
- const jpg=readFileSync(file),headers={Origin:origin,'Content-Type':'image/jpeg'};
- const rejected=await call('/api/admin/upload',{raw:jpg,headers:{...headers,Origin:'https://evil.test'}});assert.equal(rejected.status,403);
- const upload=await call('/api/admin/upload',{raw:jpg,headers});assert.equal(upload.status,201);assert.equal(upload.data.width,2832);assert.equal(upload.data.height,2696);
+ const hasExternal=existsSync(file);
+ const img=hasExternal?readFileSync(file):readFileSync(new URL('./public/assets/fitness-concept.webp',import.meta.url));
+ const mime=hasExternal?'image/jpeg':'image/webp',headers={Origin:origin,'Content-Type':mime};
+ const rejected=await call('/api/admin/upload',{raw:img,headers:{...headers,Origin:'https://evil.test'}});assert.equal(rejected.status,403);
+ const upload=await call('/api/admin/upload',{raw:img,headers});assert.equal(upload.status,201);assert.equal(upload.data.width,hasExternal?2832:704);assert.equal(upload.data.height,hasExternal?2696:340);
  const before=await doc(),originalImages=before.state.gallery.map(p=>p.image);
  before.state.gallery.push({image:upload.data.url,caption:{en:'Regression photo',pt:'Foto de regressão'},active:true});
  assert.equal((await call('/api/admin/state',{data:before,headers:{Origin:origin}})).status,200);
@@ -67,7 +69,7 @@ test('Custom domain upload accepts its configured origin and persists through dr
   const current=(await call('/api/public',{user:null})).data.state;
   assert.deepEqual(current.gallery.slice(0,-1).map(p=>p.image),originalImages);
   assert.equal(current.gallery.at(-1).image,upload.data.url);
-  const response=await uploadedResponse(upload.data.url.split('/').at(-1),env);assert.equal(response.status,200);assert.equal(response.headers.get('Content-Type'),'image/jpeg');assert.ok((await response.arrayBuffer()).byteLength>0);
+  const response=await uploadedResponse(upload.data.url.split('/').at(-1),env);assert.equal(response.status,200);assert.equal(response.headers.get('Content-Type'),mime);assert.ok((await response.arrayBuffer()).byteLength>0);
  }
 });
 
@@ -83,14 +85,14 @@ test('Security headers and safe errors',async()=>{const r=await call('/api/healt
 
 test('Home migration preserves edited events and uploads, adds approved partners once',async()=>{
  const d=await doc();d.state.content.anaTitle={en:'The woman',pt:'A mulher'};d.state.content.anaBody={en:'Ana',pt:'Ana'};d.state.events[0].address='Preserved venue';d.state.content.heroImage='/uploads/12345678901234567890123456789012.jpg';d.state.gallery=[];d.state.sponsors=[{name:'Existing partner',logo:'/assets/favicon.png',url:'https://example.com',active:true}];
- db.raw.prepare('UPDATE mova_documents SET body=?,revision=7 WHERE id=1').run(JSON.stringify(d.state));db.raw.prepare('DELETE FROM mova_meta WHERE key=?').run('home_review_v3');
+ db.raw.prepare('UPDATE mova_documents SET body=?,revision=7 WHERE id=1').run(JSON.stringify(d.state));db.raw.prepare('DELETE FROM mova_meta WHERE key=?').run('home_review_v3');resetPrepared(db);
  const r=(await call('/api/public',{user:null})).data;assert.equal(r.revision,8);assert.equal(r.state.events[0].address,'Preserved venue');assert.ok(r.state.content.heroImage.startsWith('/uploads/'));assert.equal(r.state.sponsors.length,3);assert.equal(r.state.gallery.length,4);assert.ok(r.state.content.anaBody.pt.includes('Bianca Marte'));
  assert.equal((await call('/api/public',{user:null})).data.revision,8);
  const h=(await call('/api/admin/history')).data.history;assert.ok(h.some(x=>x.revision===8));
 });
 
 test('Home migration leaves an existing real gallery intact',async()=>{
- const d=await doc();d.state.gallery=[{image:'/assets/favicon.png',caption:{en:'Our event',pt:'Nosso evento'},active:true}];db.raw.prepare('UPDATE mova_documents SET body=? WHERE id=1').run(JSON.stringify(d.state));db.raw.prepare('DELETE FROM mova_meta WHERE key=?').run('home_review_v3');
+ const d=await doc();d.state.gallery=[{image:'/assets/favicon.png',caption:{en:'Our event',pt:'Nosso evento'},active:true}];db.raw.prepare('UPDATE mova_documents SET body=? WHERE id=1').run(JSON.stringify(d.state));db.raw.prepare('DELETE FROM mova_meta WHERE key=?').run('home_review_v3');resetPrepared(db);
  const r=(await call('/api/public',{user:null})).data.state;assert.equal(r.gallery.length,1);assert.equal(r.gallery[0].caption.en,'Our event');
 });
 
@@ -105,7 +107,7 @@ test('Private draft previews require an active administrative account',async()=>
  const d=await doc();d.state.content.aboutTitle.en='PRIVATE PREVIEW';await call('/api/admin/state',{data:d});const preview=await call('/api/admin/preview-state');assert.equal(preview.data.state.content.aboutTitle.en,'PRIVATE PREVIEW');assert.equal(preview.data.editorPreview,true);assert.equal(preview.headers.get('Cache-Control'),'no-store');
 });
 test('Preview remains optional after a later draft save',async()=>{
- const d=await doc();d.state.content.aboutTitle.en='First draft';await call('/api/admin/state',{data:d});await call('/api/admin/preview-state');const a=await doc();a.state.content.aboutTitle.en='Changed after preview';await call('/api/admin/state',{data:a});const current=await doc();assert.equal(current.reviewed,false);assert.equal((await call('/api/admin/publish',{data:{revision:current.revision,publishedRevision:current.publishedRevision}})).status,200);
+ const d=await doc();d.state.content.aboutTitle.en='First draft';await call('/api/admin/state',{data:d});await call('/api/admin/preview-state');await call('/api/admin/review',{data:{revision:(await doc()).revision}});const a=await doc();a.state.content.aboutTitle.en='Changed after preview';await call('/api/admin/state',{data:a});const current=await doc();assert.equal(current.reviewed,false);assert.equal((await call('/api/admin/publish',{data:{revision:current.revision,publishedRevision:current.publishedRevision}})).status,200);
 });
 test('Incomplete gallery entries remain saved in drafts and are omitted from preview',async()=>{
  const d=await doc();d.state.gallery.push({image:'',caption:{en:'',pt:''},active:true});assert.equal((await call('/api/admin/state',{data:d})).status,200);assert.equal((await doc()).state.gallery.length,d.state.gallery.length);const p=await call('/api/admin/preview-state');assert.equal(p.data.state.gallery.length,d.state.gallery.length-1);assert.equal((await publishCurrent()).status,400);
@@ -144,7 +146,7 @@ test('Malformed Eventbrite links cannot be saved, and old invalid links do not b
 test('Removing the automatic coupon preserves pending draft text and does not publish it',async()=>{
  const live=JSON.parse(db.raw.prepare('SELECT body FROM mova_documents WHERE id=1').get().body);live.events[0].eventbriteUrl='https://www.eventbrite.com/e/2003621624214/?discount=teste';live.events[0].eventbritePromoCode='teste';live.events[0].eventbriteTestMode=true;
  const d=await doc();d.state=structuredClone(live);d.state.content.aboutTitle.en='UNPUBLISHED PRIVATE CONTENT';
- db.raw.prepare('UPDATE mova_documents SET body=? WHERE id=1').run(JSON.stringify(live));db.raw.prepare('UPDATE mova_drafts SET body=? WHERE id=1').run(JSON.stringify(d.state));db.raw.prepare('DELETE FROM mova_meta WHERE key=?').run('ticketing_setup_v8');
+ db.raw.prepare('UPDATE mova_documents SET body=? WHERE id=1').run(JSON.stringify(live));db.raw.prepare('UPDATE mova_drafts SET body=? WHERE id=1').run(JSON.stringify(d.state));db.raw.prepare('DELETE FROM mova_meta WHERE key=?').run('ticketing_setup_v8');resetPrepared(db);
  const before=d.publishedRevision,publicResult=(await call('/api/public',{user:null})).data,after=await doc();
  assert.equal(publicResult.revision,before+1);assert.notEqual(publicResult.state.content.aboutTitle.en,'UNPUBLISHED PRIVATE CONTENT');assert.equal(publicResult.state.events[0].checkout.eventId,'2003621624214');
  assert.equal(after.state.content.aboutTitle.en,'UNPUBLISHED PRIVATE CONTENT');assert.equal(after.hasDraft,true);assert.equal(after.baseRevision,publicResult.revision);assert.equal(after.state.events[0].eventbritePromoCode,'');
@@ -154,7 +156,7 @@ test('Removing the automatic coupon preserves pending draft text and does not pu
 test('Checkout setup retains a separately edited Eventbrite link in the pending draft',async()=>{
  const live=JSON.parse(db.raw.prepare('SELECT body FROM mova_documents WHERE id=1').get().body);live.events[0].eventbriteUrl='';delete live.events[0].eventbritePromoCode;delete live.events[0].eventbriteTestMode;
  const d=await doc();d.state=structuredClone(live);d.state.events[0].eventbriteUrl='https://www.eventbrite.com/e/1234567890123/';d.state.events[0].eventbritePromoCode='OTHER';d.state.events[0].eventbriteTestMode=false;
- db.raw.prepare('UPDATE mova_documents SET body=? WHERE id=1').run(JSON.stringify(live));db.raw.prepare('UPDATE mova_drafts SET body=? WHERE id=1').run(JSON.stringify(d.state));db.raw.prepare('DELETE FROM mova_meta WHERE key=?').run('ticketing_setup_v8');
+ db.raw.prepare('UPDATE mova_documents SET body=? WHERE id=1').run(JSON.stringify(live));db.raw.prepare('UPDATE mova_drafts SET body=? WHERE id=1').run(JSON.stringify(d.state));db.raw.prepare('DELETE FROM mova_meta WHERE key=?').run('ticketing_setup_v8');resetPrepared(db);
  assert.equal((await call('/api/public',{user:null})).data.state.events[0].checkout.eventId,'2003621624214');const after=await doc();assert.equal(after.state.events[0].eventbriteUrl,'https://www.eventbrite.com/e/1234567890123/');assert.equal(after.state.events[0].eventbritePromoCode,'OTHER');assert.equal(after.state.events[0].eventbriteTestMode,false);
 });
 
@@ -216,4 +218,11 @@ test('Launch migration is applied once and rebases independent pending edits wit
  const pending=await doc();pending.state.content.aboutBody.en='PENDING OWNER COPY';await call('/api/admin/state',{data:pending});
  delete env.MOVA_SKIP_LAUNCH_UPDATE;const live=(await call('/api/public',{user:null})).data,e=live.state.events[0];assert.equal(e.start,'09:50');assert.equal(e.end,'13:00');assert.equal(e.schedule.at(-1).start,'13:00');assert.equal(e.benefits.length,5);assert.equal(e.cover,d.state.events[0].cover);assert.equal(live.state.faq.length,6);
  const after=await doc();assert.equal(after.state.content.aboutBody.en,'PENDING OWNER COPY');assert.notEqual(live.state.content.aboutBody.en,'PENDING OWNER COPY');assert.equal(after.baseRevision,live.revision);assert.equal((await call('/api/public',{user:null})).data.revision,live.revision);
+});
+test('Pending invitations can be listed and cancelled, and access changes are audited',async()=>{
+ const token=await invite('owner','QA Owner Invite');
+ const pending=await call('/api/admin/invites');assert.equal(pending.status,200);assert.equal(pending.data.invites.length,1);assert.equal(pending.data.invites[0].role,'owner');
+ assert.equal((await call('/api/admin/invite/cancel',{data:{id:pending.data.invites[0].id}})).status,200);
+ assert.equal((await call('/api/invite/accept',{user:ana,data:{token}})).status,400);
+ const log=await call('/api/admin/audit');assert.equal(log.status,200);assert.ok(log.data.audit.some(a=>a.action==='Convite cancelado'));
 });
