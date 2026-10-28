@@ -7,7 +7,13 @@ import adminPath from "@/lib/admin-path.json";
  * every admin permission is still checked server-side against mova_admins.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  providers: [Google],
+  providers: [
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID || process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET || process.env.GOOGLE_CLIENT_SECRET,
+    }),
+  ],
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   trustHost: true,
   session: { strategy: "jwt", maxAge: 60 * 60 * 12, updateAge: 60 * 60 },
   pages: { signIn: adminPath, error: adminPath },
