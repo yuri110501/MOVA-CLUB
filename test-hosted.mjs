@@ -226,3 +226,22 @@ test('Pending invitations can be listed and cancelled, and access changes are au
  assert.equal((await call('/api/invite/accept',{user:ana,data:{token}})).status,400);
  const log=await call('/api/admin/audit');assert.equal(log.status,200);assert.ok(log.data.audit.some(a=>a.action==='Convite cancelado'));
 });
+
+
+test('Client copy migrates live and draft once, preserving Vercel edits and checkout',async()=>{
+ delete env.MOVA_SKIP_OFFICIAL_UPDATE;delete env.MOVA_SKIP_LAUNCH_UPDATE;
+ const before=(await call('/api/public',{user:null})).data;
+ const draft=await doc();draft.state.content.aboutBody.en='Pending editorial change';
+ assert.equal((await call('/api/admin/state',{data:draft})).status,200);
+ env.MOVA_ENABLE_CLIENT_COPY='1';
+ const updated=await call('/api/public',{user:null});assert.equal(updated.status,200);
+ const event=updated.data.state.events[0];assert.match(event.venue.en,/MetroWest/);
+ assert.match(event.included.en,/wellness refreshments/);assert.equal(event.price,before.state.events[0].price);
+ assert.equal(event.eventbriteUrl,before.state.events[0].eventbriteUrl);
+ assert.deepEqual(updated.data.state.gallery,before.state.gallery);
+ const pending=await doc();assert.equal(pending.state.content.aboutBody.en,'Pending editorial change');
+ assert.match(pending.state.events[0].venue.en,/MetroWest/);
+ assert.equal(updated.data.revision,before.revision+1);
+ resetPrepared(db);assert.equal((await call('/api/public',{user:null})).data.revision,updated.data.revision);
+ assert.equal((await call('/api/session')).data.user.auth,'google');
+});
