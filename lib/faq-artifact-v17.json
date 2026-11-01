@@ -1,0 +1,62 @@
+[
+  {
+    "question": {
+      "en": "When is the event?",
+      "pt": "Quando será o evento?"
+    },
+    "answer": {
+      "en": "Sunday, November 22, 2026, 9:50 AM–1:00 PM, Orlando local time. Check-in: 9:50 AM. Meet MOVA and our partners: 10:30 AM. Workout with Ana: 11:00–11:45 AM. Brunch and partner experiences: 11:45 AM–1:00 PM.",
+      "pt": "Domingo, 22 de novembro de 2026, das 9h50 às 13h, no horário de Orlando. Check-in: 9h50. Apresentação do MOVA e dos parceiros: 10h30. Treino com Ana: 11h às 11h45. Brunch e experiências dos parceiros: 11h45 às 13h."
+    }
+  },
+  {
+    "question": {
+      "en": "Where is the event?",
+      "pt": "Onde será o evento?"
+    },
+    "answer": {
+      "en": "Outdoor venue in MetroWest, Orlando. The exact address is private; contact the MOVA team for details.",
+      "pt": "Local ao ar livre em MetroWest, Orlando. O endereço exato é reservado; entre em contato com a equipe MOVA para mais informações."
+    }
+  },
+  {
+    "question": {
+      "en": "What does my ticket include?",
+      "pt": "O que está incluído no ingresso?"
+    },
+    "answer": {
+      "en": "A 45-minute functional workout with Ana, light brunch & wellness refreshments, partner experiences, a goodie bag, entry into giveaways and time to connect with other women.",
+      "pt": "Treino funcional de 45 minutos com Ana, brunch leve e bebidas de bem-estar, experiências dos parceiros, sacola de brindes, participação nos sorteios e momentos para se conectar com outras mulheres."
+    }
+  },
+  {
+    "question": {
+      "en": "What should I bring?",
+      "pt": "O que devo levar?"
+    },
+    "answer": {
+      "en": "Wear suitable workout clothes and comfortable sneakers, and bring a water bottle.",
+      "pt": "Use roupas adequadas para exercício e tênis confortável, e leve uma garrafinha de água."
+    }
+  },
+  {
+    "question": {
+      "en": "How much is a ticket?",
+      "pt": "Quanto custa o ingresso?"
+    },
+    "answer": {
+      "en": "The expected total is $39.19, including a $35.00 ticket and $4.19 in Eventbrite fees. Confirm the final total in the official checkout before completing your purchase.",
+      "pt": "O total previsto é de US$ 39,19, incluindo o ingresso de US$ 35,00 e US$ 4,19 em taxas do Eventbrite. Confira o total final no checkout oficial antes de concluir a compra."
+    }
+  },
+  {
+    "question": {
+      "en": "Can I get a refund or transfer my ticket?",
+      "pt": "Posso solicitar reembolso ou transferir meu ingresso?"
+    },
+    "answer": {
+      "en": "Tickets are non-refundable for personal cancellation, changes of plans, late arrival or non-attendance, as funds are committed to brunch, goodie bags and event preparations. This does not affect refunds required by applicable law or Eventbrite’s rules, including cancellation by the organizer. Tickets may be transferred to another person until November 20, 2026. Contact the MOVA team to arrange the change and provide the new attendee’s name and email.",
+      "pt": "Os ingressos não são reembolsáveis por desistência pessoal, mudança de planos, atraso ou ausência, pois os valores são utilizados nos preparativos, incluindo brunch, brindes e organização. Esta regra não elimina os reembolsos obrigatórios previstos na legislação aplicável ou nas regras do Eventbrite, inclusive em caso de cancelamento pela organização. Os ingressos podem ser transferidos para outra pessoa até 20 de novembro de 2026. Entre em contato com a equipe MOVA para organizar a alteração e informar o nome e o e-mail da nova participante."
+    }
+  }
+]

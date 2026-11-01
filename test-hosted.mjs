@@ -261,3 +261,16 @@ test('Client copy migrates live and draft once, preserving Vercel edits and chec
  resetPrepared(db);assert.equal((await call('/api/public',{user:null})).data.revision,updated.data.revision);
  assert.equal((await call('/api/session')).data.user.auth,'google');
 });
+
+test('Artifact FAQ replaces only FAQ in live and draft once, retaining future editorial changes',async()=>{
+ const faq=(await import('./lib/faq-artifact-v17.json',{with:{type:'json'}})).default;
+ const d=await doc();d.state.content.aboutBody.en='Pending independent edit';await call('/api/admin/state',{data:d});
+ const before=(await call('/api/public',{user:null})).data;
+ env.MOVA_ENABLE_FAQ_UPDATE='1';const live=(await call('/api/public',{user:null})).data;
+ assert.deepEqual(live.state.faq,faq);assert.deepEqual({...live.state,faq:before.state.faq},before.state);
+ const draft=await doc();assert.deepEqual(draft.state.faq,faq);assert.equal(draft.state.content.aboutBody.en,'Pending independent edit');
+ assert.equal(draft.baseRevision,live.revision);
+ draft.state.faq[0].answer.en='Later editorial update';await call('/api/admin/state',{data:draft});
+ resetPrepared(db);assert.equal((await doc()).state.faq[0].answer.en,'Later editorial update');
+ assert.equal((await call('/api/public',{user:null})).data.revision,live.revision);
+});
