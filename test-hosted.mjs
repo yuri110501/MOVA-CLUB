@@ -274,3 +274,18 @@ test('Artifact FAQ replaces only FAQ in live and draft once, retaining future ed
  resetPrepared(db);assert.equal((await doc()).state.faq[0].answer.en,'Later editorial update');
  assert.equal((await call('/api/public',{user:null})).data.revision,live.revision);
 });
+
+test('Verified MOVA domains can save with authentication and CSRF; untrusted origins remain blocked',async()=>{
+ const {allowedOrigins}=await import('./lib/origins.mjs');
+ env.MOVA_PUBLIC_ORIGINS=allowedOrigins({VERCEL:'1',NODE_ENV:'production'});
+ for(const origin of ['https://www.movacluborlando.com','https://movacluborlando.com','https://mova-club-orlando.vercel.app']){
+  const d=await doc();d.state.content.aboutBody.en='Origin test '+origin;
+  assert.equal((await call('/api/admin/state',{data:d,headers:{Origin:origin}})).status,200);
+  assert.equal((await call('/api/admin/state',{data:await doc(),headers:{Origin:origin},csrfToken:'wrong'})).status,403);
+  assert.equal((await call('/api/admin/state',{data:{},headers:{Origin:origin},user:null})).status,401);
+ }
+ for(const origin of ['https://evil.example','https://movacluborlando.com.evil.example','https://other-project.vercel.app','null','http://localhost:3000']){
+  const result=await call('/api/admin/state',{data:await doc(),headers:{Origin:origin}});
+  assert.equal(result.status,403);assert.equal(result.data.error,'Origem não permitida.');
+ }
+});
