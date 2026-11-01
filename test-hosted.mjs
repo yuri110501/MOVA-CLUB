@@ -34,6 +34,21 @@ async function publishCurrent(user=host,csrfToken=csrf){const d=await doc(user);
 async function invite(role='support',name='QA support'){const r=await call('/api/admin/invite',{data:{role,name}});assert.equal(r.status,201);return r.data.inviteUrl.split('#')[1]}
 beforeEach(async()=>{db=new DB();env={MOVA_SKIP_LAUNCH_UPDATE:'1',MOVA_SKIP_REFUND_UPDATE:'1',MOVA_SKIP_OFFICIAL_UPDATE:'1',MOVA_SKIP_COPY_UPDATE:'1',DB:db,BUCKET:new Bucket(),MOVA_PUBLIC_ORIGIN:'https://mova.test',MOVA_BOOTSTRAP_OWNER_EMAIL:host.email};const session=await call('/api/session');assert.equal(session.status,200);csrf=session.data.csrf});
 afterEach(()=>db.close());
+
+test('Simplified admin removes sponsor records and history while preserving photos and pending edits',async()=>{
+ const d=await doc();d.state.content.aboutBody.pt='Pending independent edit';await call('/api/admin/state',{data:d});
+ const before=(await call('/api/public',{user:null})).data.state;
+ env.MOVA_SIMPLIFIED_ADMIN='1';const live=(await call('/api/public',{user:null})).data;
+ assert.deepEqual(live.state.sponsors,[]);assert.deepEqual(live.state.gallery,before.gallery);assert.deepEqual(live.state.events,before.events);
+ const draft=await doc();assert.deepEqual(draft.state.sponsors,[]);assert.equal(draft.state.content.aboutBody.pt,'Pending independent edit');
+ assert.equal(db.raw.prepare('SELECT count(*) AS n FROM mova_history').get().n,0);
+ assert.equal((await call('/api/admin/history')).status,404);assert.equal((await call('/api/admin/restore',{data:{target:1,revision:draft.revision}})).status,404);
+ assert.equal((await call('/api/public',{user:null})).data.revision,live.revision);
+ const uploadImage=before.gallery[0].image;draft.state.sponsors=[{name:'Old import',logo:uploadImage,url:'',active:true}];
+ assert.equal((await call('/api/admin/state',{data:draft})).status,200);
+ assert.equal((await publishCurrent()).status,200);assert.equal(db.raw.prepare('SELECT count(*) AS n FROM mova_history').get().n,0);
+ assert.deepEqual((await doc()).state.sponsors,[]);assert.deepEqual((await call('/api/admin/backup')).data.history,[]);
+});
 test('Public site works anonymously; private data is excluded',async()=>{const r=await call('/api/public',{user:null});assert.equal(r.status,200);assert.equal(r.data.state.events[0].name.en,'The First Move');assert.equal(r.data.state.sponsors.length,2);assert.equal(r.data.state.gallery.length,4);assert.ok(r.data.state.content.anaBody.en.includes('Bianca Marte'));assert.ok(!JSON.stringify(r.data).includes(host.email))});
 test('Missing identity cannot read or write admin state',async()=>{assert.equal((await call('/api/admin/state',{user:null})).status,401);assert.equal((await call('/api/admin/state',{user:null,data:{}})).status,401)});
 test('Another signed-in account cannot become an admin',async()=>{const r=await call('/api/session',{user:ana});assert.equal(r.data.user,null);assert.equal(r.data.unauthorized,true);assert.equal((await call('/api/admin/state',{user:ana})).status,403)});
@@ -241,7 +256,8 @@ test('Client copy migrates live and draft once, preserving Vercel edits and chec
  assert.deepEqual(updated.data.state.gallery,before.state.gallery);
  const pending=await doc();assert.equal(pending.state.content.aboutBody.en,'Pending editorial change');
  assert.match(pending.state.events[0].venue.en,/MetroWest/);
- assert.equal(updated.data.revision,before.revision+1);
+ assert.match(event.included.en,/receive an email/);assert.match(pending.state.events[0].included.pt,/receberá um e-mail/);
+ assert.equal(updated.data.revision,before.revision+2);
  resetPrepared(db);assert.equal((await call('/api/public',{user:null})).data.revision,updated.data.revision);
  assert.equal((await call('/api/session')).data.user.auth,'google');
 });

@@ -46,3 +46,9 @@ npm run build   # Build de produção do Next.js
    - `TURSO_AUTH_TOKEN` = token do banco Turso
    - `BLOB_READ_WRITE_TOKEN` = token do Vercel Blob
 6. Faça o deploy e acesse `/gestao-mova-b99c81deec0fc4e8` entrando com a conta Google definida em `MOVA_BOOTSTRAP_OWNER_EMAIL`. A partir da aba **Usuários e acessos**, gere convites individuais de uso único para outras administradoras ou editoras.
+
+## Sincronização do artefato — versão 17
+
+Inclui aviso bilíngue de e-mail após a compra, estado sem próximo evento e edição de eventos em modal. O painel remove as áreas de patrocinadores e histórico, preservando login Google, convites, auditoria de acessos, fotos e checkout Eventbrite.
+
+`MOVA_SIMPLIFIED_ADMIN` fica ativo por padrão. Na primeira requisição após o deploy, a migração remove os registros de patrocinadores e o histórico de publicações; conteúdo publicado, rascunhos e imagens são preservados. Novas publicações não acumulam histórico. Exporte o backup existente antes de publicar se precisar guardar as versões anteriores. `MOVA_ENABLE_CLIENT_COPY` aplica também o aviso de e-mail uma única vez.

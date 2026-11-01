@@ -42,3 +42,5 @@ button.footer-admin{padding:0;background:none;font-family:inherit;line-height:in
 
 
 .event-highlights{display:grid;grid-template-columns:.7fr .7fr 1.6fr;gap:20px;background:#fcf7f8;padding:26px;border-radius:6px;margin-bottom:40px}.event-highlights .eyebrow{display:block;margin-bottom:7px}.event-highlights p{font-size:14px}.event-description{line-height:1.85!important}@media(max-width:650px){.event-highlights{grid-template-columns:1fr;gap:18px;padding:23px}}
+
+.event-awaiting{padding:40px 0 60px;text-align:center}.event-awaiting h2{font-size:clamp(28px,4vw,44px)}
